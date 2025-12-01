@@ -7,7 +7,10 @@ async function registerUser() {
   const email = document.getElementById("regEmail").value.trim();
   const password = document.getElementById("regPassword").value.trim();
 
-  if (!name  !email  !password) return alert("Заполни все поля!");
+  if (!name  !email  !password) {
+    alert("Заполни все поля!");
+    return;
+  }
 
   const res = await fetch("/api/register", {
     method: "POST",
@@ -16,15 +19,23 @@ async function registerUser() {
   });
 
   const data = await res.json();
-  if (!res.ok) return alert(data.error);
+  if (!res.ok) {
+    alert(data.error || "Ошибка регистрации");
+    return;
+  }
 
-  alert("Регистрация успешна!");
+  alert("Регистрация успешна! Теперь войдите.");
 }
 
 // ===== Вход =====
 async function login() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
+
+  if (!email || !password) {
+    alert("Введите email и пароль");
+    return;
+  }
 
   const res = await fetch("/api/login", {
     method: "POST",
@@ -33,15 +44,15 @@ async function login() {
   });
 
   const data = await res.json();
-  if (!res.ok) return alert(data.error);
+  if (!res.ok) {
+    alert(data.error || "Ошибка входа");
+    return;
+  }
 
   currentUser = data.user;
-
   document.getElementById("auth").style.display = "none";
   document.getElementById("chat").style.display = "block";
-  
-  document.getElementById("userName").innerText =
-    currentUser.name + (currentUser.premium ? " ⭐" : "");
+  document.getElementById("userName").innerText = currentUser.name;
 
   loadUsers();
   setInterval(loadMessages, 1500);
@@ -51,7 +62,7 @@ async function login() {
 async function loadUsers() {
   const res = await fetch("/api/users");
   const users = await res.json();
-  
+
   let html = "";
   users.forEach(u => {
     if (u.id !== currentUser.id) {
@@ -69,10 +80,16 @@ function openChat(id) {
 
 // ===== Сообщения =====
 async function sendMsg() {
-  if (!selectedUserId) return;
+  if (!selectedUserId) {
+    alert("Сначала выбери пользователя слева");
+    return;
+  }
+
   const text = document.getElementById("msgText").value.trim();
+  if (!text) return;
+
   document.getElementById("msgText").value = "";
-  
+
   await fetch("/api/message", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
