@@ -1,33 +1,89 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>SkillSwap PRO</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillSwap PRO</title>
+  <style>
+    body {
+      background: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #1e1e1e;
+      padding: 30px;
+      border-radius: 12px;
+      width: 340px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+    }
+    h2 { text-align: center; margin-bottom: 15px; }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 5px;
+      background: #2a2a2a;
+      color: white;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover { background: #0056b3; }
+    #chat { display: none; }
+    #users div {
+      background: #2a2a2a;
+      margin: 5px 0;
+      padding: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #messages {
+      height: 180px;
+      overflow-y: auto;
+      border: 1px solid #333;
+      padding: 10px;
+      margin: 10px 0;
+      background: #111;
+    }
+  </style>
 </head>
 <body>
+  <div class="container" id="auth">
+    <h2>Вход</h2>
+    <input id="email" type="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Пароль" />
+    <button onclick="login()">Войти</button>
 
-<div id="auth">
-<h2>Вход</h2>
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Пароль">
-<button onclick="login()">Войти</button>
+    <h2 style="margin-top:25px;">Регистрация</h2>
+    <input id="name" type="text" placeholder="Имя" />
+    <input id="regEmail" type="email" placeholder="Email" />
+    <input id="regPassword" type="password" placeholder="Пароль" />
+    <button onclick="registerUser()">Создать аккаунт</button>
+  </div>
 
-<h3>Регистрация</h3>
-<input id="name" placeholder="Имя">
-<input id="regEmail" placeholder="Email">
-<input id="regPassword" type="password" placeholder="Пароль">
-<button onclick="registerUser()">Создать аккаунт</button>
-</div>
+  <div class="container" id="chat">
+    <h2>SkillSwap PRO</h2>
+    <p id="userName"></p>
+    <div id="users"></div>
+    <div id="messages"></div>
+    <input id="msgText" type="text" placeholder="Сообщение..." />
+    <button onclick="sendMsg()">Отправить</button>
+  </div>
 
-<div id="chat" style="display:none;">
-<h2 id="userName"></h2>
-<div id="users"></div>
-<div id="messages"></div>
-<input id="msgText">
-<button onclick="sendMsg()">Отправить</button>
-</div>
-
-<script src="app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
