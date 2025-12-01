@@ -1,4 +1,4 @@
-const API_URL = "https://skillswap-pro.onrender.com"; // твой домен Render
+console.log("App loaded");
 
 let currentUser = null;
 let selectedUserId = null;
@@ -10,24 +10,20 @@ async function registerUser() {
   const password = document.getElementById("regPassword").value.trim();
 
   if (!name  !email  !password) {
-    alert("Заполни все поля!");
+    alert("Заполни все поля");
     return;
   }
 
-  const res = await fetch(`${API_URL}/api/register`, {
+  const res = await fetch("/api/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, email, password })
   });
 
   const data = await res.json();
+  if (!res.ok) return alert(data.error);
 
-  if (!res.ok) {
-    alert("Ошибка регистрации: " + data.error);
-    return;
-  }
-
-  alert("Регистрация успешна!");
+  alert("Успешная регистрация!");
 }
 
 // ===== ВХОД =====
@@ -36,25 +32,20 @@ async function login() {
   const password = document.getElementById("password").value.trim();
 
   if (!email || !password) {
-    alert("Введите email и пароль!");
+    alert("Введите данные");
     return;
   }
 
-  const res = await fetch(`${API_URL}/api/login`, {
+  const res = await fetch("/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password })
   });
 
   const data = await res.json();
-
-  if (!res.ok) {
-    alert("Ошибка входа: " + data.error);
-    return;
-  }
+  if (!res.ok) return alert(data.error);
 
   currentUser = data.user;
-
   document.getElementById("auth").style.display = "none";
   document.getElementById("chat").style.display = "block";
   document.getElementById("userName").innerText = currentUser.name;
@@ -63,19 +54,16 @@ async function login() {
   setInterval(loadMessages, 2000);
 }
 
-// ===== Список пользователей =====
+// ===== СПИСОК ПОЛЬЗОВАТЕЛЕЙ =====
 async function loadUsers() {
-  const res = await fetch(`${API_URL}/api/users`);
+  const res = await fetch("/api/users");
   const users = await res.json();
+  const box = document.getElementById("users");
 
-  let html = "";
-  users.forEach(u => {
-    if (u.id !== currentUser.id) {
-      html += <div onclick="openChat('${u.id}')">${u.name}</div>;
-    }
-  });
-
-  document.getElementById("users").innerHTML = html;
+  box.innerHTML = users
+    .filter(u => u.id !== currentUser.id)
+    .map(u => `<div onclick="openChat('${u.id}')">${u.name}</div>`)
+    .join("");
 }
 
 function openChat(id) {
@@ -85,13 +73,11 @@ function openChat(id) {
 
 // ===== ОТПРАВКА СООБЩЕНИЯ =====
 async function sendMsg() {
-  if (!selectedUserId) return;
-
   const text = document.getElementById("msgText").value.trim();
-  if (!text) return;
+  if (!text || !selectedUserId) return;
   document.getElementById("msgText").value = "";
 
-  await fetch(`${API_URL}/api/message`, {
+  await fetch("/api/message", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -104,21 +90,13 @@ async function sendMsg() {
   loadMessages();
 }
 
-// ===== Получение сообщений =====
+// ===== ЗАГРУЗКА СООБЩЕНИЙ =====
 async function loadMessages() {
   if (!selectedUserId) return;
-
-  const res = await fetch(
-    ${API_URL}/api/messages?a=${currentUser.id}&b=${selectedUserId}
-  );
+  const res = await fetch(`/api/messages?a=${currentUser.id}&b=${selectedUserId}`);
   const msgs = await res.json();
 
-  let html = "";
-  msgs.forEach(m => {
-    html += `<div>${m.time} | ${
-      m.fromId === currentUser.id ? "Вы" : "Друг"
-    }: ${m.text}</div>`;
-  });
-
-  document.getElementById("messages").innerHTML = html;
+  document.getElementById("messages").innerHTML = msgs
+    .map(m => `<div>${m.time} | ${m.fromId === currentUser.id ? "Вы" : "Друг"}: ${m.text}</div>`)
+    .join("");
 }
