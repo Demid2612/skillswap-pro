@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
-const DB_FILE = "db.json";
+const DB_FILE = path.join(__dirname, "db.json");
 
 function readDb() {
   return JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
