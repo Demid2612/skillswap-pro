@@ -1,16 +1,14 @@
-console.log("App loaded");
-
 let currentUser = null;
 let selectedUserId = null;
 
-// ===== РЕГИСТРАЦИЯ =====
+// Регистрация
 async function registerUser() {
   const name = document.getElementById("name").value.trim();
   const email = document.getElementById("regEmail").value.trim();
   const password = document.getElementById("regPassword").value.trim();
 
   if (!name  !email  !password) {
-    alert("Заполни все поля");
+    alert("Заполни все поля!");
     return;
   }
 
@@ -23,18 +21,13 @@ async function registerUser() {
   const data = await res.json();
   if (!res.ok) return alert(data.error);
 
-  alert("Успешная регистрация!");
+  alert("Регистрация успешна!");
 }
 
-// ===== ВХОД =====
+// Вход
 async function login() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
-
-  if (!email || !password) {
-    alert("Введите данные");
-    return;
-  }
 
   const res = await fetch("/api/login", {
     method: "POST",
@@ -48,21 +41,21 @@ async function login() {
   currentUser = data.user;
   document.getElementById("auth").style.display = "none";
   document.getElementById("chat").style.display = "block";
-  document.getElementById("userName").innerText = currentUser.name;
 
   loadUsers();
   setInterval(loadMessages, 2000);
 }
 
-// ===== СПИСОК ПОЛЬЗОВАТЕЛЕЙ =====
+// Список юзеров
 async function loadUsers() {
   const res = await fetch("/api/users");
   const users = await res.json();
-  const box = document.getElementById("users");
 
-  box.innerHTML = users
+  document.getElementById("users").innerHTML = users
     .filter(u => u.id !== currentUser.id)
-    .map(u => `<div onclick="openChat('${u.id}')">${u.name}</div>`)
+    .map(
+      u => <div onclick="openChat('${u.id}')">${u.name}</div>
+    )
     .join("");
 }
 
@@ -71,11 +64,10 @@ function openChat(id) {
   loadMessages();
 }
 
-// ===== ОТПРАВКА СООБЩЕНИЯ =====
+// Отправка сообщений
 async function sendMsg() {
   const text = document.getElementById("msgText").value.trim();
-  if (!text || !selectedUserId) return;
-  document.getElementById("msgText").value = "";
+  if (!text) return;
 
   await fetch("/api/message", {
     method: "POST",
@@ -87,16 +79,19 @@ async function sendMsg() {
     })
   });
 
+  document.getElementById("msgText").value = "";
   loadMessages();
 }
 
-// ===== ЗАГРУЗКА СООБЩЕНИЙ =====
+// Загрузка сообщений
 async function loadMessages() {
   if (!selectedUserId) return;
+
   const res = await fetch(`/api/messages?a=${currentUser.id}&b=${selectedUserId}`);
   const msgs = await res.json();
 
-  document.getElementById("messages").innerHTML = msgs
-    .map(m => `<div>${m.time} | ${m.fromId === currentUser.id ? "Вы" : "Друг"}: ${m.text}</div>`)
-    .join("");
+  document.getElementById("messages").innerHTML =
+    msgs.map(
+      m => <div>${m.time} | ${m.fromId === currentUser.id ? "Вы" : "Друг"}: ${m.text}</div>
+    ).join("");
 }
