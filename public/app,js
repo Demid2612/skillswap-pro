@@ -1,0 +1,96 @@
+let currentUser = null;
+let selectedUserId = null;
+
+async function registerUser() {
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("regEmail").value;
+  const password = document.getElementById("regPassword").value;
+
+  if (!name  !email  !password) return alert("Заполни все поля!");
+
+  const res = await fetch("/api/register", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ name, email, password })
+  });
+
+  if (res.ok) alert("Регистрация успешна!");
+}
+
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const res = await fetch("/api/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+  if (data.error) return alert(data.error);
+
+  currentUser = data.user;
+
+  document.getElementById("auth").style.display = "none";
+  document.getElementById("chat").style.display = "block";
+  document.getElementById("userName").innerText =
+    currentUser.name + (currentUser.premium ? " ⭐" : "");
+
+  loadUsers();
+  setInterval(loadMessages, 1500);
+}
+
+async function loadUsers() {
+  const res = await fetch("/api/users");
+  const users = await res.json();
+  let html = "";
+  users.forEach(u => {
+    if (u.id !== currentUser.id) {
+      html += `<div onclick="openChat('${u.id}')">
+        ${u.name} ${u.premium ? "⭐" : ""}
+      </div>`;
+    }
+  });
+  document.getElementById("users").innerHTML = html;
+}
+
+function openChat(id) {
+  selectedUserId = id;
+  loadMessages();
+}
+
+async function sendMsg() {
+  if (!selectedUserId) return;
+
+  const text = document.getElementById("msgText").value;
+  if (!text) return;
+
+  document.getElementById("msgText").value = "";
+
+  await fetch("/api/message", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      fromId: currentUser.id,
+      toId: selectedUserId,
+      text
+    })
+  });
+
+  loadMessages();
+}
+
+async function loadMessages() {
+  if (!selectedUserId) return;
+
+  const res = await fetch(`/api/messages?a=${currentUser.id}&b=${selectedUserId}`);
+  const msgs = await res.json();
+
+  let html = "";
+  msgs.forEach(m => {
+    html += <div>${m.time} | ${m.fromId === currentUser.id ? "Вы" : "Друг"}: ${m.text}</div>;
+  });
+
+  document.getElementById("messages").innerHTML = html;
+}
