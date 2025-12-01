@@ -1,40 +1,82 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>SkillSwap PRO</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8" />
+<title>SkillSwap PRO</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container" id="auth">
-    <h2>Вход</h2>
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Пароль" />
-    <button onclick="login()">Войти</button>
 
-    <h2 style="margin-top: 25px;">Регистрация</h2>
-    <input id="name" type="text" placeholder="Имя" />
-    <input id="regEmail" type="email" placeholder="Email" />
-    <input id="regPassword" type="password" placeholder="Пароль" />
-    <button onclick="registerUser()">Создать аккаунт</button>
-  </div>
+<div id="auth" class="box">
+  <h2>Вход</h2>
+  <input id="email" placeholder="Email" />
+  <input id="password" placeholder="Пароль" type="password" />
+  <button onclick="login()">Войти</button>
 
-  <div class="container" id="chat" style="display:none;">
-    <h2>SkillSwap PRO</h2>
-    <p id="userName"></p>
+  <h3>Регистрация</h3>
+  <input id="name" placeholder="Имя" />
+  <input id="regEmail" placeholder="Email" />
+  <input id="regPassword" placeholder="Пароль" type="password" />
+  <button onclick="registerUser()">Создать аккаунт</button>
+</div>
 
-    <h3>Пользователи</h3>
-    <div id="users"></div>
+<div id="chat" class="box" style="display:none;">
+  <h3 id="userName"></h3>
 
-    <h3>Сообщения</h3>
-    <div id="messages"></div>
+  <h3>Пользователи</h3>
+  <div id="users"></div>
 
-    <input id="msgText" type="text" placeholder="Сообщение..." />
-    <button onclick="sendMsg()">Отправить</button>
-  </div>
+  <h3>Сообщения</h3>
+  <div id="messages" class="chat"></div>
 
-  <!-- ВАЖНО: просто app.js, без /public -->
-  <script src="app.js"></script>
+  <input id="msgText" placeholder="Сообщение..." />
+  <button onclick="sendMsg()">Отправить</button>
+</div>
+
+<script>
+let currentUser=null;
+let selectedUserId=null;
+
+async function registerUser(){
+  const name=name.value.trim(),email=regEmail.value.trim(),pass=regPassword.value.trim();
+  const r=await fetch("/api/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,email,password:pass})});
+  const d=await r.json(); if(!r.ok){alert(d.error);return;}
+  alert("Готово! Теперь войдите.");
+}
+
+async function login(){
+  const email=email.value.trim(),pass=password.value.trim();
+  const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password:pass})});
+  const d=await r.json(); if(!r.ok){alert(d.error);return;}
+
+  currentUser=d.user;
+  auth.style.display="none";
+  chat.style.display="block";
+  userName.textContent=currentUser.name;
+  loadUsers();
+  setInterval(loadMessages,1000);
+}
+
+async function loadUsers(){
+  const r=await fetch("/api/users"),u=await r.json();
+  users.innerHTML=u.filter(x=>x.id!==currentUser.id).map(x=>`<div onclick="openChat('${x.id}')">${x.name}</div>`).join("");
+}
+
+function openChat(id){selectedUserId=id;loadMessages();}
+
+async function sendMsg(){
+  if(!selectedUserId) return;
+  const text=msgText.value.trim(); if(!text) return;
+  msgText.value="";
+  await fetch("/api/message",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({fromId:currentUser.id,toId:selectedUserId,text})});
+  loadMessages();
+}
+
+async function loadMessages(){
+  if(!selectedUserId) return;
+  const r=await fetch(`/api/messages?a=${currentUser.id}&b=${selectedUserId}`),m=await r.json();
+  messages.innerHTML=m.map(x=>`<div>${x.time} | ${x.fromId===currentUser.id?"Вы": "Он"}: ${x.text}</div>`).join("");
+}
+</script>
 </body>
 </html>
