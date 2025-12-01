@@ -1,0 +1,13 @@
+{
+  "name": "skillswap-pro",
+  "version": "3.0.0",
+  "description": "SkillSwap PRO - Chat Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5"
+  }
+}
