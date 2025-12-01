@@ -1,4 +1,7 @@
 const express = require("express");
+const path = require("path");
+const fs = require("fs");
+const cors = require("cors");
 const { Pool } = require("pg");
 
 const pool = new Pool({
@@ -7,9 +10,6 @@ const pool = new Pool({
     rejectUnauthorized: false
   }
 });
-const path = require("path");
-const fs = require("fs");
-const cors = require("cors");
 
 const app = express();
 app.use(cors());
