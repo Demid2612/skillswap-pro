@@ -1,25 +1,36 @@
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public"))); // ВАЖНО!!!
+app.use(express.static("public"));
 
-// ===== Простая фейковая база данных =====
-let users = [];
-let messages = [];
+const DB_FILE = path.join(__dirname, "db.json");
+
+// ===== Работа с БД (файл) =====
+function readDb() {
+  if (!fs.existsSync(DB_FILE)) {
+    return { users: [], messages: [] };
+  }
+  return JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+}
+
+function writeDb(data) {
+  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+}
 
 // ===== Регистрация =====
 app.post("/api/register", (req, res) => {
   const { name, email, password } = req.body;
-
   if (!name  !email  !password) {
     return res.status(400).json({ error: "Заполните все поля" });
   }
 
-  if (users.some(u => u.email === email)) {
+  const db = readDb();
+  if (db.users.some(u => u.email === email)) {
     return res.status(400).json({ error: "Email уже используется" });
   }
 
@@ -27,49 +38,69 @@ app.post("/api/register", (req, res) => {
     id: Date.now().toString(),
     name,
     email,
-    password
+    password,
+    friends: [],
+    premium: false,
+    online: true
   };
 
-  users.push(user);
+  db.users.push(user);
+  writeDb(db);
   res.json({ user });
 });
 
 // ===== Вход =====
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
-  const user = users.find(u => u.email === email && u.password === password);
+  const db = readDb();
+
+  const user = db.users.find(u => u.email === email && u.password === password);
 
   if (!user) {
     return res.status(400).json({ error: "Неверный логин или пароль" });
   }
 
+  user.online = true;
+  writeDb(db);
   res.json({ user });
 });
 
-// ===== Список пользователей =====
+// ===== Выдача пользователей =====
 app.get("/api/users", (req, res) => {
-  res.json(users);
+  const db = readDb();
+  res.json(db.users);
 });
 
 // ===== Сообщения =====
 app.post("/api/message", (req, res) => {
   const { fromId, toId, text } = req.body;
-  messages.push({ fromId, toId, text, time: new Date().toLocaleTimeString() });
+  if (!fromId  !toId  !text) return res.status(400).end();
+
+  const db = readDb();
+  db.messages.push({
+    id: Date.now(),
+    fromId,
+    toId,
+    text,
+    time: new Date().toLocaleTimeString()
+  });
+  writeDb(db);
   res.json({ success: true });
 });
 
 app.get("/api/messages", (req, res) => {
   const { a, b } = req.query;
-  res.json(messages.filter(m =>
-    (m.fromId === a && m.toId === b) ||
-    (m.fromId === b && m.toId === a)
-  ));
+  const db = readDb();
+  const msgs = db.messages.filter(
+    m => (m.fromId === a && m.toId === b) || (m.fromId === b && m.toId === a)
+  );
+  res.json(msgs);
 });
 
-// ===== ПОКАЗ САЙТА =====
+// ===== Подача сайта =====
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Сервер запущен на порту " + PORT));
+app.listen(PORT, () => console.log("Server OK, port: " + PORT));
