@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>SkillSwap PRO</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="auth">
+<h2>Вход</h2>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Пароль">
+<button onclick="login()">Войти</button>
+
+<h3>Регистрация</h3>
+<input id="name" placeholder="Имя">
+<input id="regEmail" placeholder="Email">
+<input id="regPassword" type="password" placeholder="Пароль">
+<button onclick="registerUser()">Создать аккаунт</button>
+</div>
+
+<div id="chat" style="display:none;">
+<h2 id="userName"></h2>
+<div id="users"></div>
+<div id="messages"></div>
+<input id="msgText">
+<button onclick="sendMsg()">Отправить</button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
